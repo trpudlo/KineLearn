@@ -1,125 +1,15 @@
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-:root {
-  --bg: #f5f2eb;
-  --bg2: #ede9df;
-  --surface: #ffffff;
-  --border: #d6cfc0;
-  --text: #1a1714;
-  --text-muted: #7a7060;
-  --accent: #2d6a4f;
-  --accent-light: #52b788;
-  --accent-bg: #d8f3dc;
-  --danger: #c0392b;
-  --danger-bg: #fdecea;
-  --neuro: #1e3a5f;
-  --neuro-light: #4a90d9;
-  --neuro-bg: #e8f0fb;
-  --trauma: #7b3f00;
-  --trauma-light: #e07b39;
-  --trauma-bg: #fdf0e6;
-  --rhuma: #4a1942;
-  --rhuma-light: #9b59b6;
-  --rhuma-bg: #f5eaf8;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.14);
-  --radius: 12px;
-  --radius-lg: 20px;
-}
-
-html {
-  font-size: 16px;
-  -webkit-font-smoothing: antialiased;
-}
-
-body {
-  font-family: 'Outfit', sans-serif;
-  background-color: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  line-height: 1.6;
-}
-
-button {
-  font-family: 'Outfit', sans-serif;
-  cursor: pointer;
-  border: none;
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-button:focus-visible {
-  outline: 2px solid var(--accent-light);
-  outline-offset: 2px;
-}
-
-input, textarea, select {
-  font-family: 'Outfit', sans-serif;
-}
-
-/* Flip card 3D */
-.flip-card-scene {
-  perspective: 1200px;
-  width: 100%;
-  height: 100%;
-}
-
-.flip-card-inner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  transform-style: preserve-3d;
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.flip-card-inner.flipped {
-  transform: rotateY(180deg);
-}
-
-.flip-card-face {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  border-radius: var(--radius-lg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2.5rem;
-  text-align: center;
-}
-
-.flip-card-face.back {
-  transform: rotateY(180deg);
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slideIn {
-  from { opacity: 0; transform: translateX(-16px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.04); }
-}
-
-.animate-fade { animation: fadeIn 0.35s ease forwards; }
-.animate-slide { animation: slideIn 0.3s ease forwards; }
-
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg2); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KineLearn — Flashcards Kinésithérapie</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
