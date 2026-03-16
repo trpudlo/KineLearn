@@ -59,7 +59,7 @@ function Header({ onHome }) {
       position: 'sticky', top: 0, zIndex: 100,
       boxShadow: 'var(--shadow-sm)'
     }}>
-      <button onClick={onHome} style={{
+       <button onClick={onHome} style={{
         background: 'none', display: 'flex', alignItems: 'center', gap: '0.6rem',
         fontSize: '1.25rem', fontWeight: 700, color: 'var(--accent)',
         letterSpacing: '-0.01em'
@@ -67,6 +67,13 @@ function Header({ onHome }) {
         <img src="/logo.png" alt="KineLearn" style={{ height: 40, width: 40, objectFit: 'contain' }} />
         KineLearn
       </button>
+      <div style={{
+        fontFamily: 'Lora, serif', fontStyle: 'italic',
+        fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 400,
+        textAlign: 'center'
+      }}>
+        "Une carte par jour, le savoir pour toujours"
+      </div>
       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>
         Flashcards cycle 2 IFMK Reims
       </div>
