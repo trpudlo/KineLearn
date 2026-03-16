@@ -64,11 +64,11 @@ function Header({ onHome }) {
         fontSize: '1.25rem', fontWeight: 700, color: 'var(--accent)',
         letterSpacing: '-0.01em'
       }}>
-        <span style={{ fontSize: '1.6rem' }}>🩺</span>
-        KinéFlash
+        <img src="/logo.png" alt="KineLearn" style={{ height: 40, width: 40, objectFit: 'contain' }} />
+        KineLearn
       </button>
       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-        Flashcards Kinésithérapie
+        Flashcards cycle 2 IFMK Reims
       </div>
     </header>
   )
@@ -589,7 +589,7 @@ export default function App() {
           <>
             {/* Hero */}
             <div className="animate-fade" style={{
-              background: 'linear-gradient(135deg, var(--accent) 0%, #1b4332 100%)',
+              background: 'linear-gradient(135deg, #1a4a7a 0%, #0d2d4f 100%)',
               borderRadius: 'var(--radius-lg)', padding: '2.5rem',
               color: 'white', marginBottom: '2.5rem',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -602,7 +602,13 @@ export default function App() {
                 <h1 style={{ fontSize: '2rem', fontWeight: 800, lineHeight: 1.2, marginBottom: '0.5rem' }}>
                   Révisez vos<br/>connaissances kiné
                 </h1>
-                <div style={{ opacity: 0.8, fontSize: '0.95rem' }}>
+                <div style={{
+                  fontFamily: 'Lora, serif', fontStyle: 'italic',
+                  fontSize: '1rem', opacity: 0.9, marginBottom: '0.5rem'
+                }}>
+                  "Une carte par jour, le savoir pour toujours"
+                </div>
+                <div style={{ opacity: 0.75, fontSize: '0.9rem' }}>
                   {totalCards} cartes · {themes.length} thèmes
                 </div>
               </div>
