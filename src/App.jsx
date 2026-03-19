@@ -474,6 +474,186 @@ function InputField({ label, value, onChange, placeholder, multiline }) {
   )
 }
 
+// ─── TargetedModal ───────────────────────────────────────────────────────────
+
+function TargetedModal({ enrichedThemes, onClose, onStart }) {
+  const [selThemes, setSelThemes] = useState(new Set())
+  const [selSubs, setSelSubs] = useState(new Set())
+
+  function toggleTheme(themeId, subs) {
+    setSelThemes(prev => {
+      const next = new Set(prev)
+      if (next.has(themeId)) {
+        next.delete(themeId)
+        // Décocher aussi tous les sous-thèmes de ce thème
+        setSelSubs(prevSubs => {
+          const ns = new Set(prevSubs)
+          subs.forEach(s => ns.delete(s.id))
+          return ns
+        })
+      } else {
+        next.add(themeId)
+        // Cocher tous les sous-thèmes
+        setSelSubs(prevSubs => {
+          const ns = new Set(prevSubs)
+          subs.forEach(s => ns.add(s.id))
+          return ns
+        })
+      }
+      return next
+    })
+  }
+
+  function toggleSub(subId, themeId, allSubs) {
+    setSelSubs(prev => {
+      const next = new Set(prev)
+      if (next.has(subId)) {
+        next.delete(subId)
+        // Si plus aucun sous-thème du thème coché → décocher le thème
+        const remaining = allSubs.filter(s => s.id !== subId && next.has(s.id))
+        if (remaining.length === 0) {
+          setSelThemes(pt => { const nt = new Set(pt); nt.delete(themeId); return nt })
+        }
+      } else {
+        next.add(subId)
+        // Si tous les sous-thèmes du thème sont cochés → cocher le thème
+        const allChecked = allSubs.every(s => s.id === subId || next.has(s.id))
+        if (allChecked) {
+          setSelThemes(pt => { const nt = new Set(pt); nt.add(themeId); return nt })
+        }
+      }
+      return next
+    })
+  }
+
+  const totalSelected = selSubs.size
+  const canStart = totalSelected > 0
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 200,
+      background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '1rem'
+    }} onClick={onClose}>
+      <div
+        className="animate-fade"
+        style={{
+          background: 'var(--surface)', borderRadius: 'var(--radius-lg)',
+          padding: '2rem', width: '100%', maxWidth: 520,
+          boxShadow: 'var(--shadow-lg)', maxHeight: '85vh',
+          display: 'flex', flexDirection: 'column'
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+          <div>
+            <h2 style={{ fontWeight: 700, fontSize: '1.15rem' }}>🎯 Révision ciblée</h2>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 2 }}>
+              Sélectionnez les thèmes et/ou sous-thèmes à réviser
+            </div>
+          </div>
+          <button onClick={onClose} style={{
+            background: 'var(--bg2)', color: 'var(--text-muted)',
+            width: 32, height: 32, borderRadius: '50%', fontSize: '1.1rem',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>×</button>
+        </div>
+
+        {/* Scrollable list */}
+        <div style={{ overflowY: 'auto', flex: 1, marginBottom: '1.25rem' }}>
+          {enrichedThemes.map(theme => {
+            const style = THEME_COLORS[theme.name] || { label: '📋', bg: 'var(--accent-bg)', accent: 'var(--accent)', light: 'var(--accent-light)' }
+            const themeChecked = selThemes.has(theme.id)
+            const someSubs = theme.subthemes.some(s => selSubs.has(s.id))
+            const totalCards = theme.subthemes.reduce((a, s) => a + (s.flashcards?.length || 0), 0)
+
+            return (
+              <div key={theme.id} style={{
+                border: '1.5px solid', borderColor: (themeChecked || someSubs) ? 'var(--accent-light)' : 'var(--border)',
+                borderRadius: 10, marginBottom: '0.75rem', overflow: 'hidden',
+                background: (themeChecked || someSubs) ? 'var(--accent-bg)' : 'var(--surface)',
+                transition: 'all 0.15s'
+              }}>
+                {/* Theme row */}
+                <div
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '0.75rem',
+                    padding: '0.75rem 1rem', cursor: 'pointer',
+                    background: style.bg
+                  }}
+                  onClick={() => toggleTheme(theme.id, theme.subthemes)}
+                >
+                  <input
+                    type="checkbox"
+                    checked={themeChecked}
+                    onChange={() => toggleTheme(theme.id, theme.subthemes)}
+                    onClick={e => e.stopPropagation()}
+                    style={{ width: 16, height: 16, cursor: 'pointer', accentColor: 'var(--accent)' }}
+                  />
+                  <span style={{ fontSize: '1.2rem' }}>{style.label}</span>
+                  <span style={{ fontWeight: 700, color: style.accent, flex: 1 }}>{theme.name}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                    {totalCards} cartes
+                  </span>
+                </div>
+
+                {/* Subtheme rows */}
+                {theme.subthemes.map(sub => (
+                  <div
+                    key={sub.id}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.75rem',
+                      padding: '0.5rem 1rem 0.5rem 2.5rem',
+                      borderTop: '1px solid var(--bg2)', cursor: 'pointer',
+                      background: selSubs.has(sub.id) ? 'rgba(45,122,184,0.07)' : 'transparent',
+                      transition: 'background 0.12s'
+                    }}
+                    onClick={() => toggleSub(sub.id, theme.id, theme.subthemes)}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selSubs.has(sub.id)}
+                      onChange={() => toggleSub(sub.id, theme.id, theme.subthemes)}
+                      onClick={e => e.stopPropagation()}
+                      style={{ width: 15, height: 15, cursor: 'pointer', accentColor: 'var(--accent)' }}
+                    />
+                    <span style={{ fontSize: '0.9rem', color: 'var(--text)', flex: 1 }}>{sub.name}</span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                      {sub.flashcards?.length || 0} carte{(sub.flashcards?.length || 0) !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Footer */}
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button onClick={onClose} style={{
+            flex: 1, padding: '0.85rem', borderRadius: 'var(--radius)',
+            background: 'var(--bg2)', color: 'var(--text)', fontWeight: 600
+          }}>Annuler</button>
+          <button
+            onClick={() => onStart(selThemes, selSubs)}
+            disabled={!canStart}
+            style={{
+              flex: 2, padding: '0.85rem', borderRadius: 'var(--radius)',
+              background: canStart ? 'var(--accent)' : 'var(--border)',
+              color: 'white', fontWeight: 700, fontSize: '0.95rem',
+              cursor: canStart ? 'pointer' : 'not-allowed'
+            }}
+          >
+            {canStart ? `🎯 Lancer (${selSubs.size} sous-thème${selSubs.size > 1 ? 's' : ''})` : 'Sélectionnez au moins un sous-thème'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── TableScreen ────────────────────────────────────────────────────────────
 
 function TableScreen({ flashcards, subthemes, themes, enrichedThemes, onBack, onEdit, onDelete, onStartQuiz }) {
@@ -1002,21 +1182,36 @@ export default function App() {
                   {totalCards} cartes · {themes.length} thèmes
                 </div>
               </div>
-              <button
-                onClick={() => startStudy({ type: 'all' })}
-                disabled={totalCards === 0}
-                className="hero-btn"
-                style={{
-                  background: 'white', color: 'var(--accent)',
-                  padding: '1rem 2rem', borderRadius: 'var(--radius)',
-                  fontWeight: 800, fontSize: '1.05rem',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                  opacity: totalCards === 0 ? 0.5 : 1,
-                  cursor: totalCards === 0 ? 'not-allowed' : 'pointer'
-                }}
-              >
-                🎲 Révision globale aléatoire
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <button
+                  onClick={() => startStudy({ type: 'all' })}
+                  disabled={totalCards === 0}
+                  style={{
+                    background: 'white', color: 'var(--accent)',
+                    padding: '1rem 2rem', borderRadius: 'var(--radius)',
+                    fontWeight: 800, fontSize: '1.05rem',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    opacity: totalCards === 0 ? 0.5 : 1,
+                    cursor: totalCards === 0 ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  🎲 Révision globale aléatoire
+                </button>
+                <button
+                  onClick={() => setModal('targeted')}
+                  disabled={totalCards === 0}
+                  style={{
+                    background: 'rgba(255,255,255,0.15)', color: 'white',
+                    border: '2px solid rgba(255,255,255,0.6)',
+                    padding: '0.85rem 2rem', borderRadius: 'var(--radius)',
+                    fontWeight: 700, fontSize: '1rem',
+                    opacity: totalCards === 0 ? 0.4 : 1,
+                    cursor: totalCards === 0 ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  🎯 Révision ciblée
+                </button>
+              </div>
             </div>
 
             {/* Actions */}
@@ -1300,6 +1495,34 @@ export default function App() {
             >{saving ? 'Suppression…' : '🗑️ Supprimer'}</button>
           </div>
         </Modal>
+      )}
+      {modal === 'targeted' && (
+        <TargetedModal
+          enrichedThemes={enrichedThemes}
+          onClose={() => setModal(null)}
+          onStart={(selectedThemeIds, selectedSubIds) => {
+            setModal(null)
+            let cards = []
+            flashcards.forEach(c => {
+              const sub = subthemes.find(s => s.id === c.subtheme_id)
+              const th = themes.find(t => t.id === sub?.theme_id)
+              const subSelected = selectedSubIds.has(c.subtheme_id)
+              const themeSelected = selectedThemeIds.has(sub?.theme_id) && !selectedSubIds.size
+              // Inclure si : son sous-thème est sélectionné, OU son thème est sélectionné entièrement
+              const inSelectedSub = selectedSubIds.has(c.subtheme_id)
+              const inSelectedTheme = selectedThemeIds.has(sub?.theme_id)
+              if (inSelectedSub || inSelectedTheme) {
+                cards.push({ ...c, subthemeName: sub?.name || '', themeName: th?.name || '' })
+              }
+            })
+            if (cards.length === 0) return
+            setDeck(shuffle(cards))
+            setCardIndex(0)
+            setScore(0)
+            setStudyContext({ type: 'custom', label: `Révision ciblée (${cards.length} cartes)` })
+            setScreen('study')
+          }}
+        />
       )}
     </>
   )
