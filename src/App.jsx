@@ -1162,7 +1162,8 @@ export default function App() {
               background: 'linear-gradient(135deg, #1a4a7a 0%, #0d2d4f 100%)',
               borderRadius: 'var(--radius-lg)', padding: '2.5rem',
               color: 'white', marginBottom: '2.5rem',
-              display: 'flex', flexDirection: 'column', gap: '1.5rem'
+              display: 'flex', flexDirection: 'column', gap: '1.5rem',
+              alignItems: 'center', textAlign: 'center'
             }}>
               <div>
                 <div style={{ fontSize: '0.85rem', fontWeight: 600, letterSpacing: '0.1em', opacity: 0.75, marginBottom: '0.5rem', textTransform: 'uppercase' }}>
@@ -1181,7 +1182,7 @@ export default function App() {
                   {totalCards} cartes · {themes.length} thèmes
                 </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'row', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', flexDirection: 'row', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
                 <button
                   onClick={() => setModal('targeted')}
                   disabled={totalCards === 0}
