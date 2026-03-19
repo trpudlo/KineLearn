@@ -201,7 +201,7 @@ function ThemeCard({ theme, subthemes, onStudy, onAddSubtheme, onAddCard }) {
   )
 }
 
-function FlashCard({ card, subthemeName, themeName, index, total, onSuccess, onFail }) {
+function FlashCard({ card, subthemeName, themeName, index, total, onSuccess, onFail, onEdit, onDelete }) {
   const [flipped, setFlipped] = useState(false)
   const [answered, setAnswered] = useState(false)
   const style = getThemeStyle(themeName)
@@ -231,7 +231,27 @@ function FlashCard({ card, subthemeName, themeName, index, total, onSuccess, onF
           <span style={{ background: style.bg, color: style.accent, padding: '2px 10px', borderRadius: 20, fontSize: '0.78rem', fontWeight: 600 }}>
             {style.label} {subthemeName}
           </span>
-          <span>Carte {index + 1} / {total}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span>Carte {index + 1} / {total}</span>
+            <button
+              onClick={(e) => { e.stopPropagation(); onEdit() }}
+              title="Modifier cette carte"
+              style={{
+                background: 'var(--bg2)', border: '1px solid var(--border)',
+                borderRadius: 6, padding: '2px 8px', fontSize: '0.8rem',
+                color: 'var(--accent)', cursor: 'pointer', fontWeight: 600
+              }}
+            >✏️</button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete() }}
+              title="Supprimer cette carte"
+              style={{
+                background: 'var(--danger-bg)', border: '1px solid var(--danger)',
+                borderRadius: 6, padding: '2px 8px', fontSize: '0.8rem',
+                color: 'var(--danger)', cursor: 'pointer', fontWeight: 600
+              }}
+            >🗑️</button>
+          </div>
         </div>
         <div style={{ height: 4, background: 'var(--border)', borderRadius: 2, overflow: 'hidden' }}>
           <div style={{
@@ -459,8 +479,10 @@ export default function App() {
   const [screen, setScreen] = useState('home') // home | study | score
 
   // Modals
-  const [modal, setModal] = useState(null) // null | 'theme' | 'subtheme' | 'card'
+  const [modal, setModal] = useState(null)
   const [modalTarget, setModalTarget] = useState(null)
+  const [editCard, setEditCard] = useState(null)
+  const [deleteCard, setDeleteCard] = useState(null)
 
   // Form state
   const [formTheme, setFormTheme] = useState('')
@@ -596,6 +618,59 @@ export default function App() {
     setModal('subtheme')
   }
 
+  function openEditCard(card) {
+    setEditCard({ ...card })
+    setFormQ(card.question)
+    setFormA(card.answer)
+    setError('')
+    setModal('edit-card')
+  }
+
+  function openDeleteCard(card) {
+    setDeleteCard(card)
+    setModal('delete-card')
+  }
+
+  async function saveEditCard() {
+    if (!formQ.trim() || !formA.trim() || !editCard?.id) return
+    setSaving(true); setError('')
+    const { error: e } = await supabase
+      .from('flashcards')
+      .update({ question: formQ.trim(), answer: formA.trim() })
+      .eq('id', editCard.id)
+    setSaving(false)
+    if (e) { setError(e.message); return }
+    // Update the current deck card in memory too
+    setDeck(prev => prev.map(c => c.id === editCard.id
+      ? { ...c, question: formQ.trim(), answer: formA.trim() }
+      : c
+    ))
+    setEditCard(null); setFormQ(''); setFormA(''); setModal(null)
+    loadData()
+  }
+
+  async function confirmDeleteCard() {
+    if (!deleteCard?.id) return
+    setSaving(true)
+    await supabase.from('flashcards').delete().eq('id', deleteCard.id)
+    setSaving(false)
+    // If deleted card is current card, skip to next
+    if (deck[cardIndex]?.id === deleteCard.id) {
+      if (deck.length <= 1) {
+        setScreen('home')
+      } else if (cardIndex >= deck.length - 1) {
+        setDeck(prev => prev.filter(c => c.id !== deleteCard.id))
+        setCardIndex(i => Math.max(0, i - 1))
+      } else {
+        setDeck(prev => prev.filter(c => c.id !== deleteCard.id))
+      }
+    } else {
+      setDeck(prev => prev.filter(c => c.id !== deleteCard.id))
+    }
+    setDeleteCard(null); setModal(null)
+    loadData()
+  }
+
   // ── Render ──
   if (loading) return <LoadingScreen />
 
@@ -726,6 +801,8 @@ export default function App() {
               total={deck.length}
               onSuccess={handleSuccess}
               onFail={handleFail}
+              onEdit={() => openEditCard(deck[cardIndex])}
+              onDelete={() => openDeleteCard(deck[cardIndex])}
             />
           </div>
         )}
@@ -823,6 +900,74 @@ export default function App() {
               cursor: (formQ.trim() && formA.trim() && (modal === 'card' || formSubthemeId)) ? 'pointer' : 'not-allowed'
             }}
           >{saving ? 'Enregistrement…' : 'Créer la carte'}</button>
+        </Modal>
+      )}
+      {modal === 'edit-card' && editCard && (
+        <Modal title="Modifier la carte" onClose={() => setModal(null)}>
+          <div style={{
+            background: 'var(--bg2)', borderRadius: 8, padding: '0.6rem 1rem',
+            marginBottom: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500
+          }}>
+            ✏️ Modification en cours
+          </div>
+          <InputField label="Question" value={formQ} onChange={setFormQ} placeholder="Question…" multiline />
+          <InputField label="Réponse" value={formA} onChange={setFormA} placeholder="Réponse…" multiline />
+          {error && <div style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: '1rem' }}>{error}</div>}
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button
+              onClick={() => setModal(null)}
+              style={{
+                flex: 1, padding: '0.85rem', borderRadius: 'var(--radius)',
+                background: 'var(--bg2)', color: 'var(--text)', fontWeight: 600, fontSize: '0.95rem'
+              }}
+            >Annuler</button>
+            <button
+              onClick={saveEditCard}
+              disabled={saving || !formQ.trim() || !formA.trim()}
+              style={{
+                flex: 2, padding: '0.85rem', borderRadius: 'var(--radius)',
+                background: (formQ.trim() && formA.trim()) ? 'var(--accent)' : 'var(--border)',
+                color: 'white', fontWeight: 700, fontSize: '0.95rem',
+                cursor: (formQ.trim() && formA.trim()) ? 'pointer' : 'not-allowed'
+              }}
+            >{saving ? 'Enregistrement…' : '✓ Enregistrer'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal === 'delete-card' && deleteCard && (
+        <Modal title="Supprimer la carte" onClose={() => setModal(null)}>
+          <div style={{
+            background: 'var(--danger-bg)', border: '1px solid var(--danger)',
+            borderRadius: 8, padding: '1rem', marginBottom: '1.25rem'
+          }}>
+            <div style={{ fontWeight: 600, color: 'var(--danger)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+              ⚠️ Êtes-vous sûr ?
+            </div>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text)', fontStyle: 'italic', lineHeight: 1.5 }}>
+              "{deleteCard.question}"
+            </div>
+          </div>
+          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1.25rem', textAlign: 'center' }}>
+            Cette action est irréversible et visible par tous les utilisateurs.
+          </div>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button
+              onClick={() => setModal(null)}
+              style={{
+                flex: 1, padding: '0.85rem', borderRadius: 'var(--radius)',
+                background: 'var(--bg2)', color: 'var(--text)', fontWeight: 600, fontSize: '0.95rem'
+              }}
+            >Annuler</button>
+            <button
+              onClick={confirmDeleteCard}
+              disabled={saving}
+              style={{
+                flex: 1, padding: '0.85rem', borderRadius: 'var(--radius)',
+                background: 'var(--danger)', color: 'white', fontWeight: 700, fontSize: '0.95rem'
+              }}
+            >{saving ? 'Suppression…' : '🗑️ Supprimer'}</button>
+          </div>
         </Modal>
       )}
     </>
