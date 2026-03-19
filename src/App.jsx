@@ -476,11 +476,13 @@ function InputField({ label, value, onChange, placeholder, multiline }) {
 
 // ─── TableScreen ────────────────────────────────────────────────────────────
 
-function TableScreen({ flashcards, subthemes, themes, enrichedThemes, onBack, onEdit, onDelete }) {
+function TableScreen({ flashcards, subthemes, themes, enrichedThemes, onBack, onEdit, onDelete, onStartQuiz }) {
   const [selected, setSelected] = useState(new Set())
   const [filterTheme, setFilterTheme] = useState('')
   const [filterSub, setFilterSub] = useState('')
   const [search, setSearch] = useState('')
+  const [confirmDeleteMulti, setConfirmDeleteMulti] = useState(false)
+  const [deletingMulti, setDeletingMulti] = useState(false)
 
   const availableSubs = filterTheme
     ? subthemes.filter(s => s.theme_id === filterTheme)
@@ -518,8 +520,17 @@ function TableScreen({ flashcards, subthemes, themes, enrichedThemes, onBack, on
     })
   }
 
+  async function deleteSelected() {
+    setDeletingMulti(true)
+    await Promise.all([...selected].map(id => supabase.from('flashcards').delete().eq('id', id)))
+    setDeletingMulti(false)
+    setSelected(new Set())
+    setConfirmDeleteMulti(false)
+  }
+
   const allChecked = filtered.length > 0 && selected.size === filtered.length
   const someChecked = selected.size > 0 && selected.size < filtered.length
+  const selectedCards = filtered.filter(c => selected.has(c.id))
 
   return (
     <div className="animate-fade">
@@ -580,28 +591,67 @@ function TableScreen({ flashcards, subthemes, themes, enrichedThemes, onBack, on
         </select>
       </div>
 
+      {/* Selection action bar */}
       {selected.size > 0 && (
         <div style={{
-          background: 'var(--danger-bg)', border: '1px solid var(--danger)',
-          borderRadius: 8, padding: '0.6rem 1rem', marginBottom: '1rem',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem'
+          background: 'var(--accent-bg)', border: '1.5px solid var(--accent-light)',
+          borderRadius: 10, padding: '0.75rem 1rem', marginBottom: '1rem',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: '0.75rem', flexWrap: 'wrap'
         }}>
-          <span style={{ fontSize: '0.88rem', color: 'var(--danger)', fontWeight: 600 }}>
-            {selected.size} carte{selected.size > 1 ? 's' : ''} sélectionnée{selected.size > 1 ? 's' : ''}
+          <span style={{ fontSize: '0.88rem', color: 'var(--accent)', fontWeight: 700 }}>
+            ✓ {selected.size} carte{selected.size > 1 ? 's' : ''} sélectionnée{selected.size > 1 ? 's' : ''}
           </span>
-          <button
-            onClick={() => {
-              if (window.confirm(`Supprimer ${selected.size} carte${selected.size > 1 ? 's' : ''} ?`)) {
-                Promise.all([...selected].map(id =>
-                  supabase.from('flashcards').delete().eq('id', id)
-                )).then(() => { setSelected(new Set()) })
-              }
-            }}
-            style={{
-              background: 'var(--danger)', color: 'white',
-              padding: '0.4rem 0.9rem', borderRadius: 6, fontWeight: 700, fontSize: '0.85rem'
-            }}
-          >🗑️ Supprimer la sélection</button>
+          <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => onStartQuiz(selectedCards)}
+              style={{
+                background: 'var(--accent)', color: 'white',
+                padding: '0.45rem 1rem', borderRadius: 7, fontWeight: 700, fontSize: '0.85rem',
+                display: 'flex', alignItems: 'center', gap: '0.4rem'
+              }}
+            >🎯 Lancer le quizz</button>
+            <button
+              onClick={() => setConfirmDeleteMulti(true)}
+              style={{
+                background: 'var(--danger-bg)', color: 'var(--danger)',
+                border: '1px solid var(--danger)',
+                padding: '0.45rem 1rem', borderRadius: 7, fontWeight: 700, fontSize: '0.85rem'
+              }}
+            >🗑️ Supprimer</button>
+            <button
+              onClick={() => setSelected(new Set())}
+              style={{
+                background: 'var(--bg2)', color: 'var(--text-muted)',
+                padding: '0.45rem 0.8rem', borderRadius: 7, fontWeight: 600, fontSize: '0.85rem'
+              }}
+            >✕ Désélectionner</button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm delete multiple */}
+      {confirmDeleteMulti && (
+        <div style={{
+          background: 'var(--danger-bg)', border: '1.5px solid var(--danger)',
+          borderRadius: 10, padding: '1rem', marginBottom: '1rem'
+        }}>
+          <div style={{ fontWeight: 700, color: 'var(--danger)', marginBottom: '0.5rem' }}>
+            ⚠️ Supprimer {selected.size} carte{selected.size > 1 ? 's' : ''} ?
+          </div>
+          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+            Cette action est irréversible et visible par tous les utilisateurs.
+          </div>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button onClick={() => setConfirmDeleteMulti(false)} style={{
+              flex: 1, padding: '0.6rem', borderRadius: 7,
+              background: 'var(--bg2)', color: 'var(--text)', fontWeight: 600
+            }}>Annuler</button>
+            <button onClick={deleteSelected} disabled={deletingMulti} style={{
+              flex: 1, padding: '0.6rem', borderRadius: 7,
+              background: 'var(--danger)', color: 'white', fontWeight: 700
+            }}>{deletingMulti ? 'Suppression…' : '🗑️ Confirmer'}</button>
+          </div>
         </div>
       )}
 
@@ -650,7 +700,7 @@ function TableScreen({ flashcards, subthemes, themes, enrichedThemes, onBack, on
                   transition: 'background 0.15s'
                 }}
               >
-                <td style={{ padding: '0.6rem 1rem', textAlign: 'center' }}>
+                <td style={{ padding: '0.6rem 1rem', textAlign: 'center', verticalAlign: 'middle' }}>
                   <input
                     type="checkbox"
                     checked={selected.has(card.id)}
@@ -658,7 +708,7 @@ function TableScreen({ flashcards, subthemes, themes, enrichedThemes, onBack, on
                     style={{ cursor: 'pointer', width: 16, height: 16 }}
                   />
                 </td>
-                <td style={{ padding: '0.6rem 1rem', verticalAlign: 'top' }}>
+                <td style={{ padding: '0.6rem 1rem', verticalAlign: 'middle' }}>
                   <span style={{
                     fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent)',
                     background: 'var(--accent-bg)', padding: '2px 8px', borderRadius: 20,
@@ -667,13 +717,13 @@ function TableScreen({ flashcards, subthemes, themes, enrichedThemes, onBack, on
                     {card.subthemeName}
                   </span>
                 </td>
-                <td style={{ padding: '0.6rem 1rem', verticalAlign: 'top', lineHeight: 1.5, color: 'var(--text)' }}>
+                <td style={{ padding: '0.6rem 1rem', verticalAlign: 'middle', lineHeight: 1.5, color: 'var(--text)' }}>
                   {card.question}
                 </td>
-                <td style={{ padding: '0.6rem 1rem', verticalAlign: 'top', lineHeight: 1.5, color: 'var(--text-muted)' }}>
+                <td style={{ padding: '0.6rem 1rem', verticalAlign: 'middle', lineHeight: 1.5, color: 'var(--text-muted)' }}>
                   {card.answer}
                 </td>
-                <td style={{ padding: '0.6rem 1rem', textAlign: 'center', verticalAlign: 'top' }}>
+                <td style={{ padding: '0.6rem 1rem', textAlign: 'center', verticalAlign: 'middle' }}>
                   <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center' }}>
                     <button
                       onClick={() => onEdit(card)}
@@ -1039,6 +1089,7 @@ export default function App() {
                 {studyContext?.type === 'all' && 'Révision globale'}
                 {studyContext?.type === 'theme' && `Thème : ${studyContext.theme.name}`}
                 {studyContext?.type === 'subtheme' && `${studyContext.theme.name} › ${studyContext.subtheme.name}`}
+                {studyContext?.type === 'custom' && studyContext.label}
               </div>
             </div>
             <FlashCard
@@ -1075,6 +1126,18 @@ export default function App() {
             onBack={() => setScreen('home')}
             onEdit={(card) => { openEditCard(card) }}
             onDelete={(card) => { openDeleteCard(card) }}
+            onStartQuiz={(cards) => {
+              const enriched = cards.map(c => {
+                const sub = subthemes.find(s => s.id === c.subtheme_id)
+                const th = themes.find(t => t.id === sub?.theme_id)
+                return { ...c, subthemeName: sub?.name || '', themeName: th?.name || '' }
+              })
+              setDeck(shuffle(enriched))
+              setCardIndex(0)
+              setScore(0)
+              setStudyContext({ type: 'custom', label: `Quizz personnalisé (${cards.length} cartes)` })
+              setScreen('study')
+            }}
           />
         )}
       </main>
