@@ -53,28 +53,36 @@ function Header({ onHome }) {
     <header style={{
       background: 'var(--surface)',
       borderBottom: '1px solid var(--border)',
-      padding: '0 2rem',
-      height: 64,
+      padding: '0.5rem 1rem',
+      minHeight: 56,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       position: 'sticky', top: 0, zIndex: 100,
-      boxShadow: 'var(--shadow-sm)'
+      boxShadow: 'var(--shadow-sm)',
+      gap: '0.5rem'
     }}>
-       <button onClick={onHome} style={{
-        background: 'none', display: 'flex', alignItems: 'center', gap: '0.6rem',
-        fontSize: '1.25rem', fontWeight: 700, color: 'var(--accent)',
-        letterSpacing: '-0.01em'
+      <button onClick={onHome} style={{
+        background: 'none', display: 'flex', alignItems: 'center', gap: '0.4rem',
+        fontSize: '1rem', fontWeight: 700, color: 'var(--accent)',
+        letterSpacing: '-0.01em', flexShrink: 0
       }}>
-        <img src="/logo.png" alt="KineLearn" style={{ height: 40, width: 40, objectFit: 'contain' }} />
+        <img src="/logo.png" alt="KineLearn" style={{ height: 28, width: 28, objectFit: 'contain' }} />
         KineLearn
       </button>
       <div style={{
+        flex: 1, minWidth: 0, textAlign: 'center',
         fontFamily: 'Lora, serif', fontStyle: 'italic',
-        fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 400,
-        textAlign: 'center'
+        fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 400,
+        lineHeight: 1.3, overflow: 'hidden',
+        display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'
       }}>
         "Une carte par jour, le savoir pour toujours"
       </div>
-      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+      <div style={{
+        fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 500,
+        textAlign: 'center', lineHeight: 1.3, flexShrink: 0, maxWidth: 72,
+        overflow: 'hidden',
+        display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical'
+      }}>
         Flashcards cycle 2 IFMK Reims
       </div>
     </header>
@@ -130,40 +138,48 @@ function ThemeCard({ theme, subthemes, onStudy, onAddSubtheme, onAddCard }) {
       <div style={{ padding: '0.5rem 0' }}>
         {subthemes.map(sub => (
           <div key={sub.id} style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '0.6rem 1.5rem', gap: '0.5rem',
+            display: 'grid',
+            gridTemplateColumns: '1fr auto auto auto',
+            alignItems: 'center',
+            padding: '0.6rem 1rem',
+            gap: '0.5rem',
             borderBottom: '1px solid var(--bg2)'
           }}>
-            <span style={{ fontWeight: 500, fontSize: '0.95rem', color: 'var(--text)' }}>
+            <span style={{
+              fontWeight: 500, fontSize: '0.9rem', color: 'var(--text)',
+              minWidth: 0, wordBreak: 'break-word'
+            }}>
               {sub.name}
             </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{
-                fontSize: '0.75rem', color: 'var(--text-muted)',
-                background: 'var(--bg2)', padding: '2px 8px', borderRadius: 20, fontWeight: 600
-              }}>
-                {sub.flashcards?.length || 0} carte{(sub.flashcards?.length || 0) !== 1 ? 's' : ''}
-              </span>
-              <button
-                onClick={() => onAddCard(sub)}
-                style={{
-                  background: 'var(--bg2)', color: 'var(--text-muted)',
-                  padding: '3px 8px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 600
-                }}
-                title="Ajouter une carte"
-              >+ carte</button>
-              <button
-                onClick={() => onStudy({ type: 'subtheme', subtheme: sub, theme })}
-                disabled={(sub.flashcards?.length || 0) === 0}
-                style={{
-                  background: (sub.flashcards?.length || 0) > 0 ? style.light : 'var(--border)',
-                  color: 'white', padding: '3px 10px', borderRadius: 6,
-                  fontSize: '0.8rem', fontWeight: 600,
-                  cursor: (sub.flashcards?.length || 0) > 0 ? 'pointer' : 'not-allowed',
-                  opacity: (sub.flashcards?.length || 0) === 0 ? 0.5 : 1
-                }}
-              >Réviser</button>
-            </div>
+            <span style={{
+              fontSize: '0.72rem', color: 'var(--text-muted)',
+              background: 'var(--bg2)', padding: '2px 6px', borderRadius: 20,
+              fontWeight: 600, textAlign: 'center', lineHeight: 1.3,
+              whiteSpace: 'nowrap', minWidth: 48
+            }}>
+              {sub.flashcards?.length || 0}<br/>carte{(sub.flashcards?.length || 0) !== 1 ? 's' : ''}
+            </span>
+            <button
+              onClick={() => onAddCard(sub)}
+              style={{
+                background: 'var(--bg2)', color: 'var(--text-muted)',
+                padding: '4px 8px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 600,
+                whiteSpace: 'nowrap'
+              }}
+              title="Ajouter une carte"
+            >+ carte</button>
+            <button
+              onClick={() => onStudy({ type: 'subtheme', subtheme: sub, theme })}
+              disabled={(sub.flashcards?.length || 0) === 0}
+              style={{
+                background: (sub.flashcards?.length || 0) > 0 ? style.light : 'var(--border)',
+                color: 'white', padding: '4px 10px', borderRadius: 6,
+                fontSize: '0.8rem', fontWeight: 600,
+                cursor: (sub.flashcards?.length || 0) > 0 ? 'pointer' : 'not-allowed',
+                opacity: (sub.flashcards?.length || 0) === 0 ? 0.5 : 1,
+                whiteSpace: 'nowrap'
+              }}
+            >Réviser</button>
           </div>
         ))}
 
@@ -595,7 +611,7 @@ export default function App() {
         {screen === 'home' && (
           <>
             {/* Hero */}
-            <div className="animate-fade" style={{
+            <div className="hero-block animate-fade" style={{
               background: 'linear-gradient(135deg, #1a4a7a 0%, #0d2d4f 100%)',
               borderRadius: 'var(--radius-lg)', padding: '2.5rem',
               color: 'white', marginBottom: '2.5rem',
@@ -622,6 +638,7 @@ export default function App() {
               <button
                 onClick={() => startStudy({ type: 'all' })}
                 disabled={totalCards === 0}
+                className="hero-btn"
                 style={{
                   background: 'white', color: 'var(--accent)',
                   padding: '1rem 2rem', borderRadius: 'var(--radius)',
