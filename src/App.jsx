@@ -1152,7 +1152,7 @@ export default function App() {
     <>
       <Header onHome={() => setScreen('home')} />
 
-      <main style={{ padding: '2rem 1.5rem', maxWidth: 1200, margin: '0 auto' }}>
+      <main style={{ padding: '2rem 1.5rem', maxWidth: 1400, margin: '0 auto' }}>
 
         {/* ── HOME SCREEN ── */}
         {screen === 'home' && (
@@ -1260,7 +1260,7 @@ export default function App() {
             </div>
 
             {/* Theme grid */}
-            <div style={{ display: 'grid', gap: '1.25rem', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
+            <div style={{ display: 'grid', gap: '1.25rem', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
               {enrichedThemes.map(t => (
                 <ThemeCard
                   key={t.id}
