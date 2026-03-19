@@ -139,18 +139,32 @@ function ThemeCard({ theme, subthemes, onStudy, onAddSubtheme, onAddCard }) {
         {subthemes.map(sub => (
           <div key={sub.id} style={{
             display: 'grid',
-            gridTemplateColumns: '1fr auto auto auto',
+            gridTemplateColumns: '1fr auto auto',
             alignItems: 'center',
             padding: '0.6rem 1rem',
             gap: '0.5rem',
             borderBottom: '1px solid var(--bg2)'
           }}>
-            <span style={{
-              fontWeight: 500, fontSize: '0.9rem', color: 'var(--text)',
-              minWidth: 0, wordBreak: 'break-word'
-            }}>
-              {sub.name}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', minWidth: 0 }}>
+              <span style={{
+                fontWeight: 500, fontSize: '0.9rem', color: 'var(--text)',
+                minWidth: 0, wordBreak: 'break-word'
+              }}>
+                {sub.name}
+              </span>
+              <button
+                onClick={() => onAddCard(sub)}
+                title="Ajouter une carte"
+                style={{
+                  background: 'var(--accent-bg)', color: 'var(--accent)',
+                  border: '1px solid var(--accent-light)',
+                  width: 20, height: 20, borderRadius: '50%',
+                  fontSize: '0.85rem', fontWeight: 700, lineHeight: 1,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0, cursor: 'pointer', padding: 0
+                }}
+              >+</button>
+            </div>
             <span style={{
               fontSize: '0.72rem', color: 'var(--text-muted)',
               background: 'var(--bg2)', padding: '2px 6px', borderRadius: 20,
@@ -159,15 +173,6 @@ function ThemeCard({ theme, subthemes, onStudy, onAddSubtheme, onAddCard }) {
             }}>
               {sub.flashcards?.length || 0}<br/>carte{(sub.flashcards?.length || 0) !== 1 ? 's' : ''}
             </span>
-            <button
-              onClick={() => onAddCard(sub)}
-              style={{
-                background: 'var(--bg2)', color: 'var(--text-muted)',
-                padding: '4px 8px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 600,
-                whiteSpace: 'nowrap'
-              }}
-              title="Ajouter une carte"
-            >+ carte</button>
             <button
               onClick={() => onStudy({ type: 'subtheme', subtheme: sub, theme })}
               disabled={(sub.flashcards?.length || 0) === 0}
@@ -469,6 +474,236 @@ function InputField({ label, value, onChange, placeholder, multiline }) {
   )
 }
 
+// ─── TableScreen ────────────────────────────────────────────────────────────
+
+function TableScreen({ flashcards, subthemes, themes, enrichedThemes, onBack, onEdit, onDelete }) {
+  const [selected, setSelected] = useState(new Set())
+  const [filterTheme, setFilterTheme] = useState('')
+  const [filterSub, setFilterSub] = useState('')
+  const [search, setSearch] = useState('')
+
+  const availableSubs = filterTheme
+    ? subthemes.filter(s => s.theme_id === filterTheme)
+    : subthemes
+
+  const filtered = flashcards.filter(c => {
+    const sub = subthemes.find(s => s.id === c.subtheme_id)
+    const th = themes.find(t => t.id === sub?.theme_id)
+    if (filterTheme && th?.id !== filterTheme) return false
+    if (filterSub && c.subtheme_id !== filterSub) return false
+    if (search) {
+      const q = search.toLowerCase()
+      return c.question.toLowerCase().includes(q) || c.answer.toLowerCase().includes(q)
+    }
+    return true
+  }).map(c => {
+    const sub = subthemes.find(s => s.id === c.subtheme_id)
+    const th = themes.find(t => t.id === sub?.theme_id)
+    return { ...c, subthemeName: sub?.name || '—', themeName: th?.name || '—' }
+  })
+
+  function toggleAll() {
+    if (selected.size === filtered.length) {
+      setSelected(new Set())
+    } else {
+      setSelected(new Set(filtered.map(c => c.id)))
+    }
+  }
+
+  function toggleOne(id) {
+    setSelected(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  const allChecked = filtered.length > 0 && selected.size === filtered.length
+  const someChecked = selected.size > 0 && selected.size < filtered.length
+
+  return (
+    <div className="animate-fade">
+      {/* Header row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+        <button
+          onClick={onBack}
+          style={{
+            background: 'var(--surface)', border: '1.5px solid var(--border)',
+            padding: '0.5rem 1rem', borderRadius: 8, fontWeight: 600, fontSize: '0.85rem',
+            color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem'
+          }}
+        >← Retour</button>
+        <h2 style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--text)' }}>
+          📋 Toutes les cartes
+          <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+            ({filtered.length} / {flashcards.length})
+          </span>
+        </h2>
+      </div>
+
+      {/* Filters */}
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+        <input
+          type="text"
+          placeholder="🔍 Rechercher…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          style={{
+            padding: '0.5rem 0.9rem', borderRadius: 8, border: '1.5px solid var(--border)',
+            fontSize: '0.88rem', background: 'var(--surface)', color: 'var(--text)',
+            fontFamily: 'Outfit, sans-serif', minWidth: 180, flex: 1
+          }}
+        />
+        <select
+          value={filterTheme}
+          onChange={e => { setFilterTheme(e.target.value); setFilterSub('') }}
+          style={{
+            padding: '0.5rem 0.9rem', borderRadius: 8, border: '1.5px solid var(--border)',
+            fontSize: '0.88rem', background: 'var(--surface)', color: 'var(--text)',
+            fontFamily: 'Outfit, sans-serif'
+          }}
+        >
+          <option value="">Tous les thèmes</option>
+          {themes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+        </select>
+        <select
+          value={filterSub}
+          onChange={e => setFilterSub(e.target.value)}
+          style={{
+            padding: '0.5rem 0.9rem', borderRadius: 8, border: '1.5px solid var(--border)',
+            fontSize: '0.88rem', background: 'var(--surface)', color: 'var(--text)',
+            fontFamily: 'Outfit, sans-serif'
+          }}
+        >
+          <option value="">Tous les sous-thèmes</option>
+          {availableSubs.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+      </div>
+
+      {selected.size > 0 && (
+        <div style={{
+          background: 'var(--danger-bg)', border: '1px solid var(--danger)',
+          borderRadius: 8, padding: '0.6rem 1rem', marginBottom: '1rem',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem'
+        }}>
+          <span style={{ fontSize: '0.88rem', color: 'var(--danger)', fontWeight: 600 }}>
+            {selected.size} carte{selected.size > 1 ? 's' : ''} sélectionnée{selected.size > 1 ? 's' : ''}
+          </span>
+          <button
+            onClick={() => {
+              if (window.confirm(`Supprimer ${selected.size} carte${selected.size > 1 ? 's' : ''} ?`)) {
+                Promise.all([...selected].map(id =>
+                  supabase.from('flashcards').delete().eq('id', id)
+                )).then(() => { setSelected(new Set()) })
+              }
+            }}
+            style={{
+              background: 'var(--danger)', color: 'white',
+              padding: '0.4rem 0.9rem', borderRadius: 6, fontWeight: 700, fontSize: '0.85rem'
+            }}
+          >🗑️ Supprimer la sélection</button>
+        </div>
+      )}
+
+      {/* Table */}
+      <div style={{ overflowX: 'auto', borderRadius: 'var(--radius)', border: '1px solid var(--border)', background: 'var(--surface)' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+          <thead>
+            <tr style={{ background: 'var(--bg2)', borderBottom: '2px solid var(--border)' }}>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'center', width: 40 }}>
+                <input
+                  type="checkbox"
+                  checked={allChecked}
+                  ref={el => { if (el) el.indeterminate = someChecked }}
+                  onChange={toggleAll}
+                  style={{ cursor: 'pointer', width: 16, height: 16 }}
+                />
+              </th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 700, color: 'var(--text)', width: '15%' }}>
+                Sous-thème
+              </th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 700, color: 'var(--text)', width: '35%' }}>
+                Question
+              </th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 700, color: 'var(--text)', width: '38%' }}>
+                Réponse
+              </th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 700, color: 'var(--text)', width: 80 }}>
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  Aucune carte trouvée
+                </td>
+              </tr>
+            )}
+            {filtered.map((card, i) => (
+              <tr
+                key={card.id}
+                style={{
+                  borderBottom: '1px solid var(--bg2)',
+                  background: selected.has(card.id) ? 'var(--accent-bg)' : i % 2 === 0 ? 'var(--surface)' : 'var(--bg)',
+                  transition: 'background 0.15s'
+                }}
+              >
+                <td style={{ padding: '0.6rem 1rem', textAlign: 'center' }}>
+                  <input
+                    type="checkbox"
+                    checked={selected.has(card.id)}
+                    onChange={() => toggleOne(card.id)}
+                    style={{ cursor: 'pointer', width: 16, height: 16 }}
+                  />
+                </td>
+                <td style={{ padding: '0.6rem 1rem', verticalAlign: 'top' }}>
+                  <span style={{
+                    fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent)',
+                    background: 'var(--accent-bg)', padding: '2px 8px', borderRadius: 20,
+                    display: 'inline-block'
+                  }}>
+                    {card.subthemeName}
+                  </span>
+                </td>
+                <td style={{ padding: '0.6rem 1rem', verticalAlign: 'top', lineHeight: 1.5, color: 'var(--text)' }}>
+                  {card.question}
+                </td>
+                <td style={{ padding: '0.6rem 1rem', verticalAlign: 'top', lineHeight: 1.5, color: 'var(--text-muted)' }}>
+                  {card.answer}
+                </td>
+                <td style={{ padding: '0.6rem 1rem', textAlign: 'center', verticalAlign: 'top' }}>
+                  <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center' }}>
+                    <button
+                      onClick={() => onEdit(card)}
+                      title="Modifier"
+                      style={{
+                        background: 'var(--accent-bg)', border: '1px solid var(--accent-light)',
+                        borderRadius: 6, padding: '3px 7px', fontSize: '0.85rem',
+                        color: 'var(--accent)', cursor: 'pointer'
+                      }}
+                    >✏️</button>
+                    <button
+                      onClick={() => onDelete(card)}
+                      title="Supprimer"
+                      style={{
+                        background: 'var(--danger-bg)', border: '1px solid var(--danger)',
+                        borderRadius: 6, padding: '3px 7px', fontSize: '0.85rem',
+                        color: 'var(--danger)', cursor: 'pointer'
+                      }}
+                    >🗑️</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main App ────────────────────────────────────────────────────────────────
 
 export default function App() {
@@ -757,6 +992,19 @@ export default function App() {
                 <span style={{ color: 'var(--accent-light)', fontSize: '1.1rem' }}>＋</span>
                 Nouvelle carte
               </button>
+              <button
+                onClick={() => setScreen('table')}
+                style={{
+                  padding: '0.65rem 1.25rem', borderRadius: 8,
+                  background: 'var(--surface)', border: '1.5px solid var(--border)',
+                  fontWeight: 600, fontSize: '0.9rem', color: 'var(--text)',
+                  display: 'flex', alignItems: 'center', gap: '0.5rem',
+                  boxShadow: 'var(--shadow-sm)'
+                }}
+              >
+                <span style={{ fontSize: '1rem' }}>📋</span>
+                Toutes les cartes
+              </button>
             </div>
 
             {/* Theme grid */}
@@ -814,6 +1062,19 @@ export default function App() {
             total={deck.length}
             onRestart={() => startStudy(studyContext)}
             onHome={() => setScreen('home')}
+          />
+        )}
+
+        {/* ── TABLE SCREEN ── */}
+        {screen === 'table' && (
+          <TableScreen
+            flashcards={flashcards}
+            subthemes={subthemes}
+            themes={themes}
+            enrichedThemes={enrichedThemes}
+            onBack={() => setScreen('home')}
+            onEdit={(card) => { openEditCard(card) }}
+            onDelete={(card) => { openDeleteCard(card) }}
           />
         )}
       </main>
