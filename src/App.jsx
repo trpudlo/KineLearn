@@ -1162,15 +1162,14 @@ export default function App() {
               background: 'linear-gradient(135deg, #1a4a7a 0%, #0d2d4f 100%)',
               borderRadius: 'var(--radius-lg)', padding: '2.5rem',
               color: 'white', marginBottom: '2.5rem',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              flexWrap: 'wrap', gap: '1.5rem'
+              display: 'flex', flexDirection: 'column', gap: '1.5rem'
             }}>
-              <div style={{ flex: 2, minWidth: 260 }}>
+              <div>
                 <div style={{ fontSize: '0.85rem', fontWeight: 600, letterSpacing: '0.1em', opacity: 0.75, marginBottom: '0.5rem', textTransform: 'uppercase' }}>
                   Base partagée en temps réel
                 </div>
                 <h1 style={{ fontSize: '2rem', fontWeight: 800, lineHeight: 1.2, marginBottom: '0.5rem' }}>
-                  Révisez vos<br/>connaissances kiné
+                  Révisez vos connaissances kiné
                 </h1>
                 <div style={{
                   fontFamily: 'Lora, serif', fontStyle: 'italic',
@@ -1189,7 +1188,7 @@ export default function App() {
                   style={{
                     background: 'rgba(255,255,255,0.15)', color: 'white',
                     border: '2px solid rgba(255,255,255,0.6)',
-                    padding: '1rem 1.5rem', borderRadius: 'var(--radius)',
+                    padding: '0.9rem 1.75rem', borderRadius: 'var(--radius)',
                     fontWeight: 700, fontSize: '1rem',
                     opacity: totalCards === 0 ? 0.4 : 1,
                     cursor: totalCards === 0 ? 'not-allowed' : 'pointer'
@@ -1202,7 +1201,7 @@ export default function App() {
                   disabled={totalCards === 0}
                   style={{
                     background: 'white', color: 'var(--accent)',
-                    padding: '1rem 1.5rem', borderRadius: 'var(--radius)',
+                    padding: '0.9rem 1.75rem', borderRadius: 'var(--radius)',
                     fontWeight: 800, fontSize: '1rem',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                     opacity: totalCards === 0 ? 0.5 : 1,
