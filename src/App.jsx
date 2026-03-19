@@ -530,7 +530,14 @@ function TableScreen({ flashcards, subthemes, themes, enrichedThemes, onBack, on
 
   const allChecked = filtered.length > 0 && selected.size === filtered.length
   const someChecked = selected.size > 0 && selected.size < filtered.length
-  const selectedCards = filtered.filter(c => selected.has(c.id))
+
+  // selectedCards doit venir de TOUTES les cartes, pas seulement des cartes filtrées
+  const allEnriched = flashcards.map(c => {
+    const sub = subthemes.find(s => s.id === c.subtheme_id)
+    const th = themes.find(t => t.id === sub?.theme_id)
+    return { ...c, subthemeName: sub?.name || '—', themeName: th?.name || '—' }
+  })
+  const selectedCards = allEnriched.filter(c => selected.has(c.id))
 
   return (
     <div className="animate-fade">
