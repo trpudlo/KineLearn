@@ -1152,7 +1152,7 @@ export default function App() {
     <>
       <Header onHome={() => setScreen('home')} />
 
-      <main style={{ padding: '2rem 1.5rem', maxWidth: 900, margin: '0 auto' }}>
+      <main style={{ padding: '2rem 1.5rem', maxWidth: 1200, margin: '0 auto' }}>
 
         {/* ── HOME SCREEN ── */}
         {screen === 'home' && (
