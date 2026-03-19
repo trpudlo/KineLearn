@@ -1260,7 +1260,7 @@ export default function App() {
             </div>
 
             {/* Theme grid */}
-            <div style={{ display: 'grid', gap: '1.25rem', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
+            <div style={{ display: 'grid', gap: '1.25rem', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
               {enrichedThemes.map(t => (
                 <ThemeCard
                   key={t.id}
