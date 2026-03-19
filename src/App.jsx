@@ -1165,7 +1165,7 @@ export default function App() {
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               flexWrap: 'wrap', gap: '1.5rem'
             }}>
-              <div>
+              <div style={{ flex: 2, minWidth: 260 }}>
                 <div style={{ fontSize: '0.85rem', fontWeight: 600, letterSpacing: '0.1em', opacity: 0.75, marginBottom: '0.5rem', textTransform: 'uppercase' }}>
                   Base partagée en temps réel
                 </div>
@@ -1182,34 +1182,34 @@ export default function App() {
                   {totalCards} cartes · {themes.length} thèmes
                 </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <button
-                  onClick={() => startStudy({ type: 'all' })}
-                  disabled={totalCards === 0}
-                  style={{
-                    background: 'white', color: 'var(--accent)',
-                    padding: '1rem 2rem', borderRadius: 'var(--radius)',
-                    fontWeight: 800, fontSize: '1.05rem',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                    opacity: totalCards === 0 ? 0.5 : 1,
-                    cursor: totalCards === 0 ? 'not-allowed' : 'pointer'
-                  }}
-                >
-                  🎲 Révision globale aléatoire
-                </button>
+              <div style={{ display: 'flex', flexDirection: 'row', gap: '0.75rem', flexWrap: 'wrap' }}>
                 <button
                   onClick={() => setModal('targeted')}
                   disabled={totalCards === 0}
                   style={{
                     background: 'rgba(255,255,255,0.15)', color: 'white',
                     border: '2px solid rgba(255,255,255,0.6)',
-                    padding: '0.85rem 2rem', borderRadius: 'var(--radius)',
+                    padding: '1rem 1.5rem', borderRadius: 'var(--radius)',
                     fontWeight: 700, fontSize: '1rem',
                     opacity: totalCards === 0 ? 0.4 : 1,
                     cursor: totalCards === 0 ? 'not-allowed' : 'pointer'
                   }}
                 >
                   🎯 Révision ciblée
+                </button>
+                <button
+                  onClick={() => startStudy({ type: 'all' })}
+                  disabled={totalCards === 0}
+                  style={{
+                    background: 'white', color: 'var(--accent)',
+                    padding: '1rem 1.5rem', borderRadius: 'var(--radius)',
+                    fontWeight: 800, fontSize: '1rem',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    opacity: totalCards === 0 ? 0.5 : 1,
+                    cursor: totalCards === 0 ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  🎲 Révision globale
                 </button>
               </div>
             </div>
