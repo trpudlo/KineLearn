@@ -89,7 +89,7 @@ function Header({ onHome }) {
   )
 }
 
-function ThemeCard({ theme, subthemes, onStudy, onAddSubtheme, onAddCard, onDeleteTheme }) {
+function ThemeCard({ theme, subthemes, onStudy, onAddSubtheme, onAddCard, onDeleteTheme, onEditTheme, onEditSubtheme, onDeleteSubtheme }) {
   const style = getThemeStyle(theme.name)
   const [expanded, setExpanded] = useState(false)
   const totalCards = subthemes.reduce((acc, s) => acc + (s.flashcards?.length || 0), 0)
@@ -134,6 +134,18 @@ function ThemeCard({ theme, subthemes, onStudy, onAddSubtheme, onAddCard, onDele
             Réviser tout
           </button>
           <button
+            onClick={() => onEditTheme(theme)}
+            title="Modifier ce thème"
+            style={{
+              background: 'var(--accent-bg)', color: 'var(--accent)',
+              border: '1px solid var(--accent-light)',
+              width: 36, height: 36, borderRadius: 8,
+              fontSize: '1rem', fontWeight: 700, lineHeight: 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0, cursor: 'pointer', padding: 0
+            }}
+          >✏️</button>
+          <button
             onClick={() => onDeleteTheme(theme)}
             title="Supprimer ce thème"
             style={{
@@ -153,7 +165,7 @@ function ThemeCard({ theme, subthemes, onStudy, onAddSubtheme, onAddCard, onDele
         {subthemes.map(sub => (
           <div key={sub.id} style={{
             display: 'grid',
-            gridTemplateColumns: '1fr auto auto',
+            gridTemplateColumns: '1fr auto auto auto auto',
             alignItems: 'center',
             padding: '0.6rem 1rem',
             gap: '0.5rem',
@@ -199,6 +211,30 @@ function ThemeCard({ theme, subthemes, onStudy, onAddSubtheme, onAddCard, onDele
                 whiteSpace: 'nowrap'
               }}
             >Réviser</button>
+            <button
+              onClick={() => onEditSubtheme(sub)}
+              title="Modifier ce sous-thème"
+              style={{
+                background: 'var(--accent-bg)', color: 'var(--accent)',
+                border: '1px solid var(--accent-light)',
+                width: 28, height: 28, borderRadius: 6,
+                fontSize: '0.8rem', fontWeight: 700, lineHeight: 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, cursor: 'pointer', padding: 0
+              }}
+            >✏️</button>
+            <button
+              onClick={() => onDeleteSubtheme(sub)}
+              title="Supprimer ce sous-thème"
+              style={{
+                background: 'var(--danger-bg)', color: 'var(--danger)',
+                border: '1px solid var(--danger)',
+                width: 28, height: 28, borderRadius: 6,
+                fontSize: '0.8rem', fontWeight: 700, lineHeight: 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, cursor: 'pointer', padding: 0
+              }}
+            >🗑️</button>
           </div>
         ))}
 
@@ -970,6 +1006,9 @@ export default function App() {
   const [editCard, setEditCard] = useState(null)
   const [deleteCard, setDeleteCard] = useState(null)
   const [deleteTheme, setDeleteTheme] = useState(null)
+  const [editTheme, setEditTheme] = useState(null)
+  const [editSubtheme, setEditSubtheme] = useState(null)
+  const [deleteSubtheme, setDeleteSubtheme] = useState(null)
 
   // Form state
   const [formTheme, setFormTheme] = useState('')
@@ -1195,7 +1234,85 @@ export default function App() {
     setModal('delete-theme')
   }
 
-  // ── Render ──
+  // ── Edit Theme Functions ──
+  function openEditTheme(theme) {
+    setEditTheme(theme)
+    setFormTheme(theme.name)
+    setModal('edit-theme')
+  }
+
+  async function saveEditTheme() {
+    if (!formTheme.trim() || !editTheme?.id) return
+    try {
+      setSaving(true)
+      setError('')
+      const { error: e } = await supabase
+        .from('themes')
+        .update({ name: formTheme.trim() })
+        .eq('id', editTheme.id)
+      if (e) throw e
+      setEditTheme(null)
+      setFormTheme('')
+      setModal(null)
+      loadData()
+    } catch (err) {
+      setError(err.message || 'Erreur lors de la modification du thème')
+      setSaving(false)
+    }
+  }
+
+  // ── Edit Subtheme Functions ──
+  function openEditSubtheme(subtheme) {
+    setEditSubtheme(subtheme)
+    setFormSubtheme(subtheme.name)
+    setModal('edit-subtheme')
+  }
+
+  async function saveEditSubtheme() {
+    if (!formSubtheme.trim() || !editSubtheme?.id) return
+    try {
+      setSaving(true)
+      setError('')
+      const { error: e } = await supabase
+        .from('subthemes')
+        .update({ name: formSubtheme.trim() })
+        .eq('id', editSubtheme.id)
+      if (e) throw e
+      setEditSubtheme(null)
+      setFormSubtheme('')
+      setModal(null)
+      loadData()
+    } catch (err) {
+      setError(err.message || 'Erreur lors de la modification du sous-thème')
+      setSaving(false)
+    }
+  }
+
+  function openDeleteSubtheme(subtheme) {
+    setDeleteSubtheme(subtheme)
+    setModal('delete-subtheme')
+  }
+
+  async function confirmDeleteSubtheme() {
+    if (!deleteSubtheme?.id) return
+    try {
+      setSaving(true)
+      setError('')
+      
+      // Supprimer toutes les flashcards du sous-thème
+      await supabase.from('flashcards').delete().eq('subtheme_id', deleteSubtheme.id)
+      
+      // Supprimer le sous-thème
+      await supabase.from('subthemes').delete().eq('id', deleteSubtheme.id)
+      
+      setDeleteSubtheme(null)
+      setModal(null)
+      loadData()
+    } catch (err) {
+      setError(err.message || 'Erreur lors de la suppression du sous-thème')
+      setSaving(false)
+    }
+  }
   if (loading) return <LoadingScreen />
 
   const totalCards = flashcards.length
@@ -1322,6 +1439,9 @@ export default function App() {
                   onAddSubtheme={openAddSubtheme}
                   onAddCard={openAddCard}
                   onDeleteTheme={openDeleteTheme}
+                  onEditTheme={openEditTheme}
+                  onEditSubtheme={openEditSubtheme}
+                  onDeleteSubtheme={openDeleteSubtheme}
                 />
               ))}
             </div>
@@ -1510,6 +1630,107 @@ export default function App() {
                 cursor: (formQ.trim() && formA.trim()) ? 'pointer' : 'not-allowed'
               }}
             >{saving ? 'Enregistrement…' : '✓ Enregistrer'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal === 'edit-theme' && editTheme && (
+        <Modal title="Modifier le thème" onClose={() => setModal(null)}>
+          <div style={{
+            background: 'var(--bg2)', borderRadius: 8, padding: '0.6rem 1rem',
+            marginBottom: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500
+          }}>
+            ✏️ {editTheme.name}
+          </div>
+          <InputField label="Nom du thème" value={formTheme} onChange={setFormTheme} placeholder="Ex : Neurologie" />
+          {error && <div style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: '1rem' }}>{error}</div>}
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button
+              onClick={() => setModal(null)}
+              style={{
+                flex: 1, padding: '0.85rem', borderRadius: 'var(--radius)',
+                background: 'var(--bg2)', color: 'var(--text)', fontWeight: 600, fontSize: '0.95rem'
+              }}
+            >Annuler</button>
+            <button
+              onClick={saveEditTheme}
+              disabled={saving || !formTheme.trim()}
+              style={{
+                flex: 2, padding: '0.85rem', borderRadius: 'var(--radius)',
+                background: formTheme.trim() ? 'var(--accent)' : 'var(--border)',
+                color: 'white', fontWeight: 700, fontSize: '0.95rem',
+                cursor: formTheme.trim() ? 'pointer' : 'not-allowed'
+              }}
+            >{saving ? 'Enregistrement…' : '✓ Enregistrer'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal === 'edit-subtheme' && editSubtheme && (
+        <Modal title="Modifier le sous-thème" onClose={() => setModal(null)}>
+          <div style={{
+            background: 'var(--bg2)', borderRadius: 8, padding: '0.6rem 1rem',
+            marginBottom: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500
+          }}>
+            ✏️ {editSubtheme.name}
+          </div>
+          <InputField label="Nom du sous-thème" value={formSubtheme} onChange={setFormSubtheme} placeholder="Ex : Hémiplégie" />
+          {error && <div style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: '1rem' }}>{error}</div>}
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button
+              onClick={() => setModal(null)}
+              style={{
+                flex: 1, padding: '0.85rem', borderRadius: 'var(--radius)',
+                background: 'var(--bg2)', color: 'var(--text)', fontWeight: 600, fontSize: '0.95rem'
+              }}
+            >Annuler</button>
+            <button
+              onClick={saveEditSubtheme}
+              disabled={saving || !formSubtheme.trim()}
+              style={{
+                flex: 2, padding: '0.85rem', borderRadius: 'var(--radius)',
+                background: formSubtheme.trim() ? 'var(--accent)' : 'var(--border)',
+                color: 'white', fontWeight: 700, fontSize: '0.95rem',
+                cursor: formSubtheme.trim() ? 'pointer' : 'not-allowed'
+              }}
+            >{saving ? 'Enregistrement…' : '✓ Enregistrer'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal === 'delete-subtheme' && deleteSubtheme && (
+        <Modal title="Supprimer le sous-thème" onClose={() => setModal(null)}>
+          <div style={{
+            background: 'var(--danger-bg)', border: '1px solid var(--danger)',
+            borderRadius: 8, padding: '1rem', marginBottom: '1.25rem'
+          }}>
+            <div style={{ fontWeight: 600, color: 'var(--danger)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+              ⚠️ Êtes-vous sûr ?
+            </div>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text)', fontStyle: 'italic', lineHeight: 1.5 }}>
+              Sous-thème : <strong>{deleteSubtheme.name}</strong>
+            </div>
+          </div>
+          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1.25rem', textAlign: 'center', lineHeight: 1.6 }}>
+            Cette action supprimera le sous-thème et <strong>toutes les cartes associées</strong>. Cette action est irréversible et visible par tous les utilisateurs.
+          </div>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button
+              onClick={() => setModal(null)}
+              style={{
+                flex: 1, padding: '0.85rem', borderRadius: 'var(--radius)',
+                background: 'var(--bg2)', color: 'var(--text)', fontWeight: 600, fontSize: '0.95rem'
+              }}
+            >Annuler</button>
+            <button
+              onClick={confirmDeleteSubtheme}
+              disabled={saving}
+              style={{
+                flex: 1, padding: '0.85rem', borderRadius: 'var(--radius)',
+                background: 'var(--danger)', color: 'white', fontWeight: 700, fontSize: '0.95rem',
+                cursor: saving ? 'not-allowed' : 'pointer'
+              }}
+            >{saving ? 'Suppression…' : '🗑️ Supprimer le sous-thème'}</button>
           </div>
         </Modal>
       )}
