@@ -89,7 +89,7 @@ function Header({ onHome }) {
   )
 }
 
-function ThemeCard({ theme, subthemes, onStudy, onAddSubtheme, onAddCard }) {
+function ThemeCard({ theme, subthemes, onStudy, onAddSubtheme, onAddCard, onDeleteTheme }) {
   const style = getThemeStyle(theme.name)
   const [expanded, setExpanded] = useState(false)
   const totalCards = subthemes.reduce((acc, s) => acc + (s.flashcards?.length || 0), 0)
@@ -119,19 +119,33 @@ function ThemeCard({ theme, subthemes, onStudy, onAddSubtheme, onAddCard }) {
             </div>
           </div>
         </div>
-        <button
-          onClick={() => onStudy({ type: 'theme', theme })}
-          disabled={totalCards === 0}
-          style={{
-            background: totalCards > 0 ? style.accent : 'var(--border)',
-            color: totalCards > 0 ? 'white' : 'var(--text-muted)',
-            padding: '0.5rem 1rem', borderRadius: 8,
-            fontWeight: 600, fontSize: '0.85rem',
-            cursor: totalCards > 0 ? 'pointer' : 'not-allowed'
-          }}
-        >
-          Réviser tout
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <button
+            onClick={() => onStudy({ type: 'theme', theme })}
+            disabled={totalCards === 0}
+            style={{
+              background: totalCards > 0 ? style.accent : 'var(--border)',
+              color: totalCards > 0 ? 'white' : 'var(--text-muted)',
+              padding: '0.5rem 1rem', borderRadius: 8,
+              fontWeight: 600, fontSize: '0.85rem',
+              cursor: totalCards > 0 ? 'pointer' : 'not-allowed'
+            }}
+          >
+            Réviser tout
+          </button>
+          <button
+            onClick={() => onDeleteTheme(theme)}
+            title="Supprimer ce thème"
+            style={{
+              background: 'var(--danger-bg)', color: 'var(--danger)',
+              border: '1px solid var(--danger)',
+              width: 36, height: 36, borderRadius: 8,
+              fontSize: '1rem', fontWeight: 700, lineHeight: 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0, cursor: 'pointer', padding: 0
+            }}
+          >🗑️</button>
+        </div>
       </div>
 
       {/* Subthemes */}
@@ -955,6 +969,7 @@ export default function App() {
   const [modalTarget, setModalTarget] = useState(null)
   const [editCard, setEditCard] = useState(null)
   const [deleteCard, setDeleteCard] = useState(null)
+  const [deleteTheme, setDeleteTheme] = useState(null)
 
   // Form state
   const [formTheme, setFormTheme] = useState('')
@@ -1143,6 +1158,43 @@ export default function App() {
     loadData()
   }
 
+  async function confirmDeleteTheme() {
+    if (!deleteTheme?.id) return
+    try {
+      setSaving(true)
+      setError('')
+      
+      // Récupérer tous les sous-thèmes du thème à supprimer
+      const relatedSubs = subthemes.filter(s => s.theme_id === deleteTheme.id)
+      const subIds = relatedSubs.map(s => s.id)
+      
+      // Supprimer toutes les flashcards associées
+      if (subIds.length > 0) {
+        await supabase.from('flashcards').delete().in('subtheme_id', subIds)
+      }
+      
+      // Supprimer tous les sous-thèmes
+      if (subIds.length > 0) {
+        await supabase.from('subthemes').delete().in('id', subIds)
+      }
+      
+      // Supprimer le thème
+      await supabase.from('themes').delete().eq('id', deleteTheme.id)
+      
+      setDeleteTheme(null)
+      setModal(null)
+      loadData()
+    } catch (err) {
+      setError(err.message || 'Erreur lors de la suppression du thème')
+      setSaving(false)
+    }
+  }
+
+  function openDeleteTheme(theme) {
+    setDeleteTheme(theme)
+    setModal('delete-theme')
+  }
+
   // ── Render ──
   if (loading) return <LoadingScreen />
 
@@ -1269,6 +1321,7 @@ export default function App() {
                   onStudy={startStudy}
                   onAddSubtheme={openAddSubtheme}
                   onAddCard={openAddCard}
+                  onDeleteTheme={openDeleteTheme}
                 />
               ))}
             </div>
@@ -1457,6 +1510,43 @@ export default function App() {
                 cursor: (formQ.trim() && formA.trim()) ? 'pointer' : 'not-allowed'
               }}
             >{saving ? 'Enregistrement…' : '✓ Enregistrer'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal === 'delete-theme' && deleteTheme && (
+        <Modal title="Supprimer le thème" onClose={() => setModal(null)}>
+          <div style={{
+            background: 'var(--danger-bg)', border: '1px solid var(--danger)',
+            borderRadius: 8, padding: '1rem', marginBottom: '1.25rem'
+          }}>
+            <div style={{ fontWeight: 600, color: 'var(--danger)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+              ⚠️ Êtes-vous sûr ?
+            </div>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text)', fontStyle: 'italic', lineHeight: 1.5 }}>
+              Thème : <strong>{deleteTheme.name}</strong>
+            </div>
+          </div>
+          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1.25rem', textAlign: 'center', lineHeight: 1.6 }}>
+            Cette action supprimera le thème, tous ses sous-thèmes et <strong>toutes les cartes associées</strong>. Cette action est irréversible et visible par tous les utilisateurs.
+          </div>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button
+              onClick={() => setModal(null)}
+              style={{
+                flex: 1, padding: '0.85rem', borderRadius: 'var(--radius)',
+                background: 'var(--bg2)', color: 'var(--text)', fontWeight: 600, fontSize: '0.95rem'
+              }}
+            >Annuler</button>
+            <button
+              onClick={confirmDeleteTheme}
+              disabled={saving}
+              style={{
+                flex: 1, padding: '0.85rem', borderRadius: 'var(--radius)',
+                background: 'var(--danger)', color: 'white', fontWeight: 700, fontSize: '0.95rem',
+                cursor: saving ? 'not-allowed' : 'pointer'
+              }}
+            >{saving ? 'Suppression…' : '🗑️ Supprimer le thème'}</button>
           </div>
         </Modal>
       )}
