@@ -1037,7 +1037,7 @@ export default function App() {
     const [{ data: t }, { data: s }, { data: f }] = await Promise.all([
       supabase.from('themes').select('*').order('name'),
       supabase.from('subthemes').select('*').order('name'),
-      supabase.from('flashcards').select('*'),
+      supabase.from('flashcards').select('*').limit(10000), // Augmenté de 1000 à 10000 pour supporter plus de flashcards
     ])
     setThemes(t || [])
     setSubthemes(s || [])
