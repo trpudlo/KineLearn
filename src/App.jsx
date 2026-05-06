@@ -119,7 +119,7 @@ function ThemeCard({ theme, subthemes, onStudy, onAddSubtheme, onAddCard, onDele
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.35rem' }}>
           <button
             onClick={() => onStudy({ type: 'theme', theme })}
             disabled={totalCards === 0}
@@ -128,35 +128,38 @@ function ThemeCard({ theme, subthemes, onStudy, onAddSubtheme, onAddCard, onDele
               color: totalCards > 0 ? 'white' : 'var(--text-muted)',
               padding: '0.5rem 1rem', borderRadius: 8,
               fontWeight: 600, fontSize: '0.85rem',
-              cursor: totalCards > 0 ? 'pointer' : 'not-allowed'
+              cursor: totalCards > 0 ? 'pointer' : 'not-allowed',
+              whiteSpace: 'nowrap', width: '100%'
             }}
           >
             Réviser tout
           </button>
-          <button
-            onClick={() => onEditTheme(theme)}
-            title="Modifier ce thème"
-            style={{
-              background: 'var(--accent-bg)', color: 'var(--accent)',
-              border: '1px solid var(--accent-light)',
-              width: 36, height: 36, borderRadius: 8,
-              fontSize: '1rem', fontWeight: 700, lineHeight: 1,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0, cursor: 'pointer', padding: 0
-            }}
-          >✏️</button>
-          <button
-            onClick={() => onDeleteTheme(theme)}
-            title="Supprimer ce thème"
-            style={{
-              background: 'var(--danger-bg)', color: 'var(--danger)',
-              border: '1px solid var(--danger)',
-              width: 36, height: 36, borderRadius: 8,
-              fontSize: '1rem', fontWeight: 700, lineHeight: 1,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0, cursor: 'pointer', padding: 0
-            }}
-          >🗑️</button>
+          <div style={{ display: 'flex', gap: '0.4rem' }}>
+            <button
+              onClick={() => onEditTheme(theme)}
+              title="Modifier ce thème"
+              style={{
+                background: 'var(--accent-bg)', color: 'var(--accent)',
+                border: '1px solid var(--accent-light)',
+                width: 36, height: 26, borderRadius: 8,
+                fontSize: '0.9rem', fontWeight: 700, lineHeight: 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, cursor: 'pointer', padding: 0
+              }}
+            >✏️</button>
+            <button
+              onClick={() => onDeleteTheme(theme)}
+              title="Supprimer ce thème"
+              style={{
+                background: 'var(--danger-bg)', color: 'var(--danger)',
+                border: '1px solid var(--danger)',
+                width: 36, height: 26, borderRadius: 8,
+                fontSize: '0.9rem', fontWeight: 700, lineHeight: 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, cursor: 'pointer', padding: 0
+              }}
+            >🗑️</button>
+          </div>
         </div>
       </div>
 
