@@ -649,7 +649,6 @@ function TargetedModal({ enrichedThemes, onClose, onStart }) {
                     onClick={e => e.stopPropagation()}
                     style={{ width: 16, height: 16, cursor: 'pointer', accentColor: 'var(--accent)' }}
                   />
-                  <span style={{ fontSize: '1.2rem' }}>{style.label}</span>
                   <span style={{ fontWeight: 700, color: style.accent, flex: 1 }}>{theme.name}</span>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>
                     {totalCards} cartes
@@ -1037,7 +1036,7 @@ export default function App() {
     const [{ data: t }, { data: s }, { data: f }] = await Promise.all([
       supabase.from('themes').select('*').order('name'),
       supabase.from('subthemes').select('*').order('name'),
-      supabase.from('flashcards').select('*').limit(10000), // Augmenté de 1000 à 10000 pour supporter plus de flashcards
+      supabase.from('flashcards').select('*'),
     ])
     setThemes(t || [])
     setSubthemes(s || [])
