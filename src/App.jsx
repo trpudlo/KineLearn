@@ -168,16 +168,17 @@ function ThemeCard({ theme, subthemes, onStudy, onAddSubtheme, onAddCard, onDele
         {subthemes.map(sub => (
           <div key={sub.id} style={{
             display: 'grid',
-            gridTemplateColumns: '1fr auto auto',
+            gridTemplateColumns: '1fr auto auto auto',
             alignItems: 'center',
             padding: '0.6rem 1rem',
             gap: '0.5rem',
-            borderBottom: '1px solid var(--bg2)'
+            borderBottom: '1px solid var(--bg2)',
+            minWidth: 0
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', minWidth: 0, maxWidth: '100%' }}>
               <span style={{
                 fontWeight: 500, fontSize: '0.9rem', color: 'var(--text)',
-                minWidth: 0, wordBreak: 'break-word'
+                minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
               }}>
                 {sub.name}
               </span>
