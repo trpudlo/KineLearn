@@ -168,17 +168,17 @@ function ThemeCard({ theme, subthemes, onStudy, onAddSubtheme, onAddCard, onDele
         {subthemes.map(sub => (
           <div key={sub.id} style={{
             display: 'grid',
-            gridTemplateColumns: '1fr auto auto auto',
+            gridTemplateColumns: 'minmax(0,1fr) 52px 70px 66px',
             alignItems: 'center',
             padding: '0.6rem 1rem',
             gap: '0.5rem',
             borderBottom: '1px solid var(--bg2)',
-            minWidth: 0
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', minWidth: 0, maxWidth: '100%' }}>
+            {/* Colonne 1 : nom + bouton + */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', overflow: 'hidden' }}>
               <span style={{
                 fontWeight: 500, fontSize: '0.9rem', color: 'var(--text)',
-                minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
               }}>
                 {sub.name}
               </span>
@@ -195,53 +195,54 @@ function ThemeCard({ theme, subthemes, onStudy, onAddSubtheme, onAddCard, onDele
                 }}
               >+</button>
             </div>
+            {/* Colonne 2 : compteur cartes */}
             <span style={{
               fontSize: '0.72rem', color: 'var(--text-muted)',
               background: 'var(--bg2)', padding: '2px 6px', borderRadius: 20,
               fontWeight: 600, textAlign: 'center', lineHeight: 1.3,
-              whiteSpace: 'nowrap', minWidth: 48
+              whiteSpace: 'nowrap'
             }}>
               {sub.flashcards?.length || 0}<br/>carte{(sub.flashcards?.length || 0) !== 1 ? 's' : ''}
             </span>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem' }}>
+            {/* Colonne 3 : bouton Réviser */}
+            <button
+              onClick={() => onStudy({ type: 'subtheme', subtheme: sub, theme })}
+              disabled={(sub.flashcards?.length || 0) === 0}
+              style={{
+                background: (sub.flashcards?.length || 0) > 0 ? style.light : 'var(--border)',
+                color: 'white', padding: '4px 6px', borderRadius: 6,
+                fontSize: '0.8rem', fontWeight: 600,
+                cursor: (sub.flashcards?.length || 0) > 0 ? 'pointer' : 'not-allowed',
+                opacity: (sub.flashcards?.length || 0) === 0 ? 0.5 : 1,
+                whiteSpace: 'nowrap', width: '100%', textAlign: 'center'
+              }}
+            >Réviser</button>
+            {/* Colonne 4 : boutons edit + delete */}
+            <div style={{ display: 'flex', gap: '0.3rem', justifyContent: 'flex-end' }}>
               <button
-                onClick={() => onStudy({ type: 'subtheme', subtheme: sub, theme })}
-                disabled={(sub.flashcards?.length || 0) === 0}
+                onClick={() => onEditSubtheme(sub)}
+                title="Modifier ce sous-thème"
                 style={{
-                  background: (sub.flashcards?.length || 0) > 0 ? style.light : 'var(--border)',
-                  color: 'white', padding: '4px 10px', borderRadius: 6,
-                  fontSize: '0.8rem', fontWeight: 600,
-                  cursor: (sub.flashcards?.length || 0) > 0 ? 'pointer' : 'not-allowed',
-                  opacity: (sub.flashcards?.length || 0) === 0 ? 0.5 : 1,
-                  whiteSpace: 'nowrap', width: '100%'
+                  background: 'var(--accent-bg)', color: 'var(--accent)',
+                  border: '1px solid var(--accent-light)',
+                  width: 30, height: 26, borderRadius: 6,
+                  fontSize: '0.75rem', fontWeight: 700, lineHeight: 1,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0, cursor: 'pointer', padding: 0
                 }}
-              >Réviser</button>
-              <div style={{ display: 'flex', gap: '0.3rem' }}>
-                <button
-                  onClick={() => onEditSubtheme(sub)}
-                  title="Modifier ce sous-thème"
-                  style={{
-                    background: 'var(--accent-bg)', color: 'var(--accent)',
-                    border: '1px solid var(--accent-light)',
-                    width: 28, height: 22, borderRadius: 6,
-                    fontSize: '0.75rem', fontWeight: 700, lineHeight: 1,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0, cursor: 'pointer', padding: 0
-                  }}
-                >✏️</button>
-                <button
-                  onClick={() => onDeleteSubtheme(sub)}
-                  title="Supprimer ce sous-thème"
-                  style={{
-                    background: 'var(--danger-bg)', color: 'var(--danger)',
-                    border: '1px solid var(--danger)',
-                    width: 28, height: 22, borderRadius: 6,
-                    fontSize: '0.75rem', fontWeight: 700, lineHeight: 1,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0, cursor: 'pointer', padding: 0
-                  }}
-                >🗑️</button>
-              </div>
+              >✏️</button>
+              <button
+                onClick={() => onDeleteSubtheme(sub)}
+                title="Supprimer ce sous-thème"
+                style={{
+                  background: 'var(--danger-bg)', color: 'var(--danger)',
+                  border: '1px solid var(--danger)',
+                  width: 30, height: 26, borderRadius: 6,
+                  fontSize: '0.75rem', fontWeight: 700, lineHeight: 1,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0, cursor: 'pointer', padding: 0
+                }}
+              >🗑️</button>
             </div>
           </div>
         ))}
